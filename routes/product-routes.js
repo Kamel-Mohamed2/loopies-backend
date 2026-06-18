@@ -1,10 +1,12 @@
 import express from 'express'
-import { getProduct, addProduct, updateProduct, deleteProduct } from '../controllers/product-controller.js';
+import { getProduct, addProduct, updateProduct, deleteProduct, getAllProducts } from '../controllers/product-controller.js';
 import verifyFirebaseAdmin from '../middleware/auth-middleware.js'
 
 
 const productRoutes = express.Router();
 
+
+productRoutes.get('/', getAllProducts);
 productRoutes.get('/:productId', getProduct);
 productRoutes.post('/', verifyFirebaseAdmin, addProduct);
 productRoutes.put('/:productId', verifyFirebaseAdmin, updateProduct);

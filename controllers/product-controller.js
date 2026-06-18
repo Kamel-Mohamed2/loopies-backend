@@ -38,6 +38,30 @@ export const getProduct = async (req, res) => {
     res.status(message.status).json({ message: message.message, product: message.product || null });
 }
 
+export const getAllProducts = async (req, res) => {
+    let message;
+    try {
+        const products = await Product.find({});
+
+        // Return 200 even if empty, because the database search successfully executed
+        message = {
+            status: 200, // Changed to a Number
+            message: products.length > 0 ? 'Products Found' : 'No products available right now',
+            products
+        };
+    }
+    catch (err) {
+        console.error("Error fetching all products:", err.message || err);
+        message = {
+            status: 500,
+            message: 'An unexpected error happened.',
+            error: err.message || err
+        };
+    }
+
+    res.status(message.status).json(message);
+};
+
 export const addProduct = async (req, res) => {
     let message;
 

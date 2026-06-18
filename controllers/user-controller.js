@@ -65,9 +65,9 @@ export const getAllUsers = async (req, res) => {
             error: err.message || err
         };
     }
+    res.status(message.status).json(message);
+
 }
-
-
 
 
 export const deleteUser = async (req, res) => {
