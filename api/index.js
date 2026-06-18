@@ -5,7 +5,8 @@ import mongoose from 'mongoose';
 import dns from 'dns';
 import authRoutes from '../routes/auth-routes.js';
 import userRoutes from '../routes/user-routes.js';
-
+import productRoutes from '../routes/product-routes.js'
+import uploadToCloudinaryRoutes from '../routes/upload-to-cloudinary.js';
 
 dotenv.config();
 
@@ -18,6 +19,8 @@ app.use(express.json());
 
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/users', userRoutes);
+app.use('/api/v1/product', productRoutes);
+app.use('/api/v1/upload', uploadToCloudinaryRoutes);
 
 async function connectDB() {
   try {
