@@ -1,0 +1,4 @@
+.env
+database.txt
+admin.txt
+node_modules/
