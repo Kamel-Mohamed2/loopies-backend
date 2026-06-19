@@ -5,9 +5,9 @@ import { getUserById , getAllUsers , deleteUser } from '../controllers/user-cont
 
 const userRoutes = express.Router();
 
-userRoutes.get('/get-user/:uid' , verifyFirebaseAdmin , getUserById);
-userRoutes.get('/get-all-users' , verifyFirebaseAdmin , getAllUsers);
-userRoutes.delete('/delete-user/:uid' , verifyFirebaseAdmin , deleteUser);
+userRoutes.get('/:uid' , verifyFirebaseAdmin , getUserById);
+userRoutes.get('/' , verifyFirebaseAdmin , getAllUsers);
+userRoutes.delete('/:uid' , verifyFirebaseAdmin , deleteUser);
 
 
 
