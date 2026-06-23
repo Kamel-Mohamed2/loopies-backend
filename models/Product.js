@@ -22,7 +22,12 @@ const productSchema = new mongoose.Schema({
     },
     options: [{
         type: String,
-    }]
+    }],
+    category: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Category',
+        required: [true, 'A product must belong to a category']
+    }
 }, { timestamps: true }
 );
 

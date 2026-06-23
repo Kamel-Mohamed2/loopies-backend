@@ -1,6 +1,6 @@
-import express from 'express.js'
-import verifyFirebaseAdmin from '../middleware/auth-middleware';
-import { getCategory , getAllCategories , updateCategory , addCategory } from '../controllers/category-controller';
+import express from 'express';
+import verifyFirebaseAdmin from '../middleware/auth-middleware.js';
+import { getCategory , getAllCategories , updateCategory , addCategory } from '../controllers/category-controller.js';
 
 const categoryRoutes = express.Router();
 
