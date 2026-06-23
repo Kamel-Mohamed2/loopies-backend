@@ -16,8 +16,8 @@ const verifyFirebaseToken = async (req, res, next) => {
         const decodedToken = await auth.verifyIdToken(idToken, true);
 
         req.user = decodedToken;
-
         next();
+
     } catch (err) {
         console.error('Firebase Auth Error:', err.message);
 
