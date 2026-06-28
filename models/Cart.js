@@ -1,11 +1,11 @@
-import express from 'express';
+import mongoose from 'mongoose';
 
-const cartSchema = new express.Schema({
+const cartSchema = new mongoose.Schema({
     guestId: { type: String, default: null },
     userId: { type: String, default: null },
     items: [
         {
-            productId: { type: express.Schema.Types.ObjectId, ref: 'Product', required: true },
+            productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
             quantity: { type: Number, required: true, min: 1 },
             orderPrice: { type: Number, required: true }
         }
@@ -22,6 +22,6 @@ cartSchema.index(
     }
 );
 
-const Cart = express.model('Cart', cartSchema);
+const Cart = mongoose.model('Cart', cartSchema);
 
 export default Cart;

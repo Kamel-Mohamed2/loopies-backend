@@ -9,6 +9,8 @@ import productRoutes from '../routes/product-routes.js'
 import uploadToCloudinaryRoutes from '../routes/upload-to-cloudinary.js';
 import categoryRoutes from '../routes/category-routes.js';
 import cartRoutes from '../routes/cart-routes.js';
+import orderRoutes from '../routes/order-routes.js';
+
 
 dotenv.config();
 
@@ -25,6 +27,8 @@ app.use('/api/v1/product', productRoutes);
 app.use('/api/v1/upload', uploadToCloudinaryRoutes);
 app.use('/api/v1/category', categoryRoutes);
 app.use('/api/v1/cart', cartRoutes);
+app.use('/api/v1/order', orderRoutes);
+
 
 
 async function connectDB() {

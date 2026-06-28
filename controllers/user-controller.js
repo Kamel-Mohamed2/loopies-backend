@@ -14,7 +14,7 @@ export const getUserById = async (req, res) => {
     }
     else {
         try {
-            const user = await User.findOne({ id: uid });
+            const user = await User.findOne({ _id: uid });
             if (!user) {
                 message = {
                     status: '404',
@@ -81,7 +81,7 @@ export const deleteUser = async (req, res) => {
     }
 
     try {
-        const user = await User.findOne({ id: uid });
+        const user = await User.findOne({ _id: uid });
 
         if (!user) {
             return res.status(404).json({
@@ -93,7 +93,7 @@ export const deleteUser = async (req, res) => {
         await auth.revokeRefreshTokens(uid);
         await auth.deleteUser(uid);
 
-        await User.deleteOne({ id: uid });
+        await User.deleteOne({ _id: uid });
 
         return res.status(200).json({
             status: 200,
@@ -110,4 +110,43 @@ export const deleteUser = async (req, res) => {
         });
     }
 };
+
+export const addUser = async (req, res) => {
+    const { user } = req.body;
+    const { name, email } = user;
+    if (!name || !email) {
+        return res.status(400).json({
+            status: 400,
+            message: 'Invalid user data'
+        });
+    }
+    else {
+        try {
+            const existingUser = await User.findOne({ email });
+            if (existingUser) {
+                return res.status(400).json({
+                    status: 400,
+                    message: 'User already exists'
+                });
+            }
+            const newUser = new User({
+                name,
+                email
+            });
+            await newUser.save();
+            return res.status(201).json({
+                status: 201,
+                message: 'User created successfully',
+                user: newUser
+            });
+        }
+        catch (err) {
+            console.error(err);
+            return res.status(500).json({
+                status: 500,
+                message: 'Failed to create user'
+            });
+        }
+    }
+}
 
