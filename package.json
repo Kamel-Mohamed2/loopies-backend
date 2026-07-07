@@ -29,5 +29,8 @@
   },
   "overrides": {
     "jose": "4.15.9"
+  },
+  "optionalDependencies": {
+    "@img/sharp-linux-x64": "0.35.1"
   }
 }
