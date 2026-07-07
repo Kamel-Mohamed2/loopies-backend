@@ -7,7 +7,7 @@ export const getUserById = async (req, res) => {
     const { uid } = req.params;
     if (!uid) {
         message = {
-            status: '400',
+            status: 400,
             message: 'User ID is required'
         }
         return res.status(400).json(message);
@@ -17,23 +17,23 @@ export const getUserById = async (req, res) => {
             const user = await User.findOne({ _id: uid });
             if (!user) {
                 message = {
-                    status: '404',
+                    status: 404,
                     message: 'User ID Not Found'
                 }
             }
             else {
                 message = {
-                    status: '200',
+                    status: 200,
                     message: 'User Found',
                     user
                 }
             }
         }
         catch (err) {
+            console.error('Error fetching user:', err.message || err);
             message = {
                 status: 500,
-                message: 'An unexpected error happened.',
-                error: err.message || err
+                message: 'An unexpected error happened.'
             };
         }
     }
@@ -46,23 +46,23 @@ export const getAllUsers = async (req, res) => {
         const users = await User.find({});
         if (users.length === 0) {
             message = {
-                status: '404',
+                status: 404,
                 message: 'No users found'
             }
         }
         else {
             message = {
-                status: '200',
+                status: 200,
                 message: 'Users Found',
                 users
             }
         }
     }
     catch (err) {
+        console.error('Error fetching users:', err.message || err);
         message = {
             status: 500,
-            message: 'An unexpected error happened.',
-            error: err.message || err
+            message: 'An unexpected error happened.'
         };
     }
     res.status(message.status).json(message);

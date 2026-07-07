@@ -39,7 +39,7 @@ export const getOrder = async (req, res) => {
         }
     }
     catch (err) {
-        consol.error(err);
+        console.error(err);
         return res.status(500).json({
             status: 500,
             message: 'Internal server error'
@@ -50,7 +50,7 @@ export const getOrder = async (req, res) => {
 export const addOrder = async (req, res) => {
     const { orderDetails } = req.body;
     const { userId, customerName, customerEmail, customerWhatsappNumber, customerNumberTwo, customerAddress, products, paymentMethod, paymentProof } = orderDetails;
-    const orderTotal = 0
+    let orderTotal = 0;
     products.forEach(product => {
         orderTotal += product.orderPrice * product.quantity
     })

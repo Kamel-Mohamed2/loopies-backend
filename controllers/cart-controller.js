@@ -1,3 +1,5 @@
+import Cart from '../models/Cart.js';
+
 export const getCartByIdentity = async (req, res) => {
     const { userId, guestId } = req.query;
 

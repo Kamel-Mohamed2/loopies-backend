@@ -31,8 +31,7 @@ export const uploadToCloudinary = async (req, res) => {
                     console.error("Cloudinary Error:", error);
                     return res.status(500).json({ 
                         success: false, 
-                        message: 'Cloudinary upload failed', 
-                        error: error.message 
+                        message: 'Cloudinary upload failed'
                     });
                 }
 
@@ -50,8 +49,7 @@ export const uploadToCloudinary = async (req, res) => {
         console.error("Server Error during image optimization:", err);
         return res.status(500).json({ 
             success: false, 
-            message: 'Internal server error during image processing', 
-            error: err.message 
+            message: 'Internal server error during image processing'
         });
     }
 };

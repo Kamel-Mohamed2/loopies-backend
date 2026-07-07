@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
+import rateLimit from 'express-rate-limit';
 import dns from 'dns';
 import authRoutes from '../routes/auth-routes.js';
 import userRoutes from '../routes/user-routes.js';
@@ -14,14 +15,49 @@ import orderRoutes from '../routes/order-routes.js';
 
 dotenv.config();
 
-dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1']);
+// Override DNS servers in development (some local networks can't resolve Atlas SRV records)
+if (process.env.NODE_ENV !== 'production') {
+    dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1']);
+}
 
 const app = express();
-app.use(cors());
-app.use(express.json());
 
+// --- CORS ---
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
+    : [];
 
-app.use('/api/v1/auth', authRoutes);
+app.use(cors({
+    origin: (origin, callback) => {
+        // Allow requests with no origin (mobile apps, Postman, server-to-server)
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+}));
+
+// --- Body parser with size limit ---
+app.use(express.json({ limit: '100kb' }));
+
+// --- Rate limiting for auth routes ---
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 50, // 50 requests per window per IP
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+        status: 429,
+        message: 'Too many requests. Please try again later.',
+    },
+});
+
+// --- Routes ---
+app.use('/api/v1/auth', authLimiter, authRoutes);
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/product', productRoutes);
 app.use('/api/v1/upload', uploadToCloudinaryRoutes);
@@ -29,21 +65,63 @@ app.use('/api/v1/category', categoryRoutes);
 app.use('/api/v1/cart', cartRoutes);
 app.use('/api/v1/order', orderRoutes);
 
-
-
-async function connectDB() {
-  try {
-    await mongoose.connect(process.env.MONGO_URI);
-
-    console.log("✅ Mongo connected");
-  } catch (err) {
-    console.error(err.message);
-  }
-}
-connectDB();
-
-
-
-app.listen(3000, () => {
-  console.log('Server is running on port 3000');
+// --- 404 handler ---
+app.use((req, res) => {
+    res.status(404).json({
+        status: 404,
+        message: `Route ${req.method} ${req.originalUrl} not found`,
+    });
 });
+
+// --- Global error handler ---
+app.use((err, req, res, next) => {
+    console.error('Unhandled error:', err.message);
+
+    // CORS error
+    if (err.message === 'Not allowed by CORS') {
+        return res.status(403).json({
+            status: 403,
+            message: 'Origin not allowed by CORS policy',
+        });
+    }
+
+    res.status(err.status || 500).json({
+        status: err.status || 500,
+        message: process.env.NODE_ENV === 'production'
+            ? 'Internal server error'
+            : err.message,
+    });
+});
+
+// --- MongoDB connection with retry ---
+async function connectDB(retries = 5) {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+            await mongoose.connect(process.env.MONGO_URI, {
+                serverSelectionTimeoutMS: 5000,
+            });
+            console.log('✅ MongoDB connected');
+            return;
+        } catch (err) {
+            console.error(`❌ MongoDB connection attempt ${attempt}/${retries} failed:`, err.message);
+            if (attempt === retries) {
+                console.error('❌ All MongoDB connection attempts failed. Exiting.');
+                process.exit(1);
+            }
+            // Wait before retrying (exponential backoff)
+            await new Promise(resolve => setTimeout(resolve, Math.min(1000 * 2 ** attempt, 10000)));
+        }
+    }
+}
+await connectDB();
+
+// --- Start server (local only — Vercel handles this via the export below) ---
+if (!process.env.VERCEL) {
+    const PORT = process.env.PORT || 3000;
+    app.listen(PORT, () => {
+        console.log(`🚀 Server running on port ${PORT}`);
+    });
+}
+
+// Export for serverless deployments (Vercel, etc.)
+export default app;
