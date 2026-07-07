@@ -56,6 +56,31 @@ const authLimiter = rateLimit({
     },
 });
 
+// --- MongoDB connection (serverless-friendly: lazy + cached) ---
+let cachedConnection = null;
+
+async function connectDB() {
+    if (cachedConnection && mongoose.connection.readyState === 1) {
+        return cachedConnection;
+    }
+    cachedConnection = await mongoose.connect(process.env.MONGO_URI, {
+        serverSelectionTimeoutMS: 5000,
+    });
+    console.log('✅ MongoDB connected');
+    return cachedConnection;
+}
+
+// Middleware: ensure DB is connected before handling any request
+app.use(async (req, res, next) => {
+    try {
+        await connectDB();
+        next();
+    } catch (err) {
+        console.error('❌ MongoDB connection failed:', err.message);
+        res.status(500).json({ status: 500, message: 'Database connection failed' });
+    }
+});
+
 // --- Routes ---
 app.use('/api/v1/auth', authLimiter, authRoutes);
 app.use('/api/v1/users', userRoutes);
@@ -93,35 +118,18 @@ app.use((err, req, res, next) => {
     });
 });
 
-// --- MongoDB connection (serverless-friendly with cached connection) ---
-let cachedConnection = null;
-
-async function connectDB() {
-    if (cachedConnection && mongoose.connection.readyState === 1) {
-        return cachedConnection;
-    }
-
-    try {
-        cachedConnection = await mongoose.connect(process.env.MONGO_URI, {
-            serverSelectionTimeoutMS: 5000,
-        });
-        console.log('✅ MongoDB connected');
-        return cachedConnection;
-    } catch (err) {
-        console.error('❌ MongoDB connection failed:', err.message);
-        cachedConnection = null;
-        throw err;
-    }
-}
-await connectDB();
-
 // --- Start server (local only — Vercel handles this via the export below) ---
 if (!process.env.VERCEL) {
     const PORT = process.env.PORT || 3000;
-    app.listen(PORT, () => {
-        console.log(`🚀 Server running on port ${PORT}`);
+    connectDB().then(() => {
+        app.listen(PORT, () => {
+            console.log(`🚀 Server running on port ${PORT}`);
+        });
+    }).catch(err => {
+        console.error('❌ Failed to start server:', err.message);
+        process.exit(1);
     });
 }
 
-// Export for serverless deployments (Vercel, etc.)
+// Export for Vercel serverless
 export default app;
