@@ -28,7 +28,7 @@ try {
     }
 } catch (error) {
     console.error("❌ Failed to initialize Firebase Admin SDK:", error.message);
-    process.exit(1); 
+    throw error;
 }
 
 const auth = getAuth();

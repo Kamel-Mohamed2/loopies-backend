@@ -93,24 +93,24 @@ app.use((err, req, res, next) => {
     });
 });
 
-// --- MongoDB connection with retry ---
-async function connectDB(retries = 5) {
-    for (let attempt = 1; attempt <= retries; attempt++) {
-        try {
-            await mongoose.connect(process.env.MONGO_URI, {
-                serverSelectionTimeoutMS: 5000,
-            });
-            console.log('✅ MongoDB connected');
-            return;
-        } catch (err) {
-            console.error(`❌ MongoDB connection attempt ${attempt}/${retries} failed:`, err.message);
-            if (attempt === retries) {
-                console.error('❌ All MongoDB connection attempts failed. Exiting.');
-                process.exit(1);
-            }
-            // Wait before retrying (exponential backoff)
-            await new Promise(resolve => setTimeout(resolve, Math.min(1000 * 2 ** attempt, 10000)));
-        }
+// --- MongoDB connection (serverless-friendly with cached connection) ---
+let cachedConnection = null;
+
+async function connectDB() {
+    if (cachedConnection && mongoose.connection.readyState === 1) {
+        return cachedConnection;
+    }
+
+    try {
+        cachedConnection = await mongoose.connect(process.env.MONGO_URI, {
+            serverSelectionTimeoutMS: 5000,
+        });
+        console.log('✅ MongoDB connected');
+        return cachedConnection;
+    } catch (err) {
+        console.error('❌ MongoDB connection failed:', err.message);
+        cachedConnection = null;
+        throw err;
     }
 }
 await connectDB();
